@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Sweets Control</title>
+
+<style>
+:root{
+  --bg:#05060a;
+  --panel:#121521;
+  --panel2:#0e111a;
+  --text:#e9e9ee;
+  --muted:#9aa0ad;
+  --accent:#8b6cff;
+  --danger:#ff4d4d;
+  --border:#252a3a;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background:var(--bg); /* full page now fully dark */
+  color:var(--text);
+}
+
+.wrap{
+  max-width:920px;
+  margin:0 auto;
+  padding:28px 18px 60px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.card{
+  background:linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:18px;
+  box-shadow:0 18px 40px rgba(0,0,0,0.35);
+}
+
+h2{
+  margin:0 0 10px 0;
+  font-size:16px;
+  font-weight:600;
+}
+
+.small{
+  color:var(--muted);
+  font-size:12px;
+}
+
+button{
+  border:0;
+  border-radius:12px;
+  padding:12px 14px;
+  cursor:pointer;
+  font-weight:500;
+  color:white;
+}
+
+.primary{background:var(--accent)}
+.danger{background:var(--danger)}
+.ghost{
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--text);
+}
+
+button:active{transform:scale(0.98)}
+
+input{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:var(--panel2);
+  color:var(--text);
+  outline:none;
+  text-transform:uppercase; /* live uppercase typing */
+}
+
+input:focus{border-color:rgba(139,108,255,0.6)}
+
+.row{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+
+.pill{
+  padding:7px 10px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  font-size:12px;
+  color:var(--muted);
+  cursor:pointer;
+  transition:0.2s;
+  user-select:none;
+}
+
+.pill:hover{color:var(--text);border-color:#3a4056}
+
+.pill.active{
+  border-color:var(--accent);
+  color:var(--text);
+  background:rgba(139,108,255,0.12);
+}
+
+.flex{
+  display:flex;
+  gap:10px;
+}
+
+.bigBtn{
+  width:100%;
+  padding:14px;
+  font-size:15px;
+}
+
+.topline{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  color:var(--muted);
+  font-size:12px;
+}
+
+.hidden{display:none}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+  <div class="card">
+    <h2>Sweets Control</h2>
+    <div class="small">Live urge tracking system</div>
+  </div>
+
+  <div class="card">
+    <button id="urgeBtn" class="primary bigBtn">I WANT SWEETS</button>
+
+    <div id="active" class="hidden" style="margin-top:12px">
+      <div class="topline">
+        <div>Active session</div>
+        <div><span id="timer">0</span>s</div>
+      </div>
+
+      <div class="row">
+        <button class="ghost" id="stillBtn">Still want</button>
+        <button class="danger" id="giveBtn">Ate sweets</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Trigger</h2>
+
+    <div class="flex">
+      <input id="reasonInput" placeholder="TYPE TRIGGER (E.G. BORED, TV, STRESSED)"/>
+      <button class="primary" id="addReasonBtn">Add</button>
+    </div>
+
+    <div class="row" id="reasonList"></div>
+  </div>
+
+  <div class="card">
+    <h2>Today</h2>
+    <div id="stats" class="small"></div>
+  </div>
+
+</div>
+
+<script>
+const KEY="habit_v5";
+
+let state=JSON.parse(localStorage.getItem(KEY)||JSON.stringify({
+  cravings:[],
+  reasons:[]
+}));
+
+let active=null;
+let timer=null;
+let sec=0;
+
+function today(){
+  return new Date().toISOString().slice(0,10);
+}
+
+function save(){
+  localStorage.setItem(KEY,JSON.stringify(state));
+  render();
+}
+
+function start(){
+  if(timer) clearInterval(timer);
+
+  active={ts:Date.now(),reasons:[]};
+  sec=0;
+
+  document.getElementById("active").classList.remove("hidden");
+
+  timer=setInterval(()=>{
+    sec++;
+    document.getElementById("timer").innerText=sec;
+    render();
+  },1000);
+}
+
+function finish(result){
+  clearInterval(timer);
+
+  state.cravings.push({
+    ts:active.ts,
+    day:today(),
+    durationSec:sec,
+    result,
+    reasons:active.reasons
+  });
+
+  active=null;
+  document.getElementById("active").classList.add("hidden");
+
+  save();
+}
+
+document.getElementById("urgeBtn").onclick=start;
+document.getElementById("stillBtn").onclick=()=>{};
+document.getElementById("giveBtn").onclick=()=>finish("consumed");
+
+function normalize(v){
+  return v.trim().toUpperCase(); // FORCE UPPERCASE STORAGE + DISPLAY
+}
+
+function addReason(){
+  const inp=document.getElementById("reasonInput");
+  let v=normalize(inp.value);
+  if(!v)return;
+
+  if(!state.reasons.includes(v)) state.reasons.push(v);
+  if(active && !active.reasons.includes(v)) active.reasons.push(v);
+
+  inp.value="";
+  save();
+}
+
+document.getElementById("addReasonBtn").onclick=addReason;
+
+document.getElementById("reasonInput").addEventListener("keydown",(e)=>{
+  if(e.key==="Enter") addReason();
+});
+
+function todayCravings(){
+  return state.cravings.filter(c=>c.day===today());
+}
+
+function renderReasons(){
+  const el=document.getElementById("reasonList");
+  el.innerHTML="";
+
+  state.reasons.forEach(r=>{
+    const d=document.createElement("div");
+    d.className="pill"+(active && active.reasons.includes(r)?" active":"");
+    d.innerText=r;
+
+    d.onclick=()=>{
+      if(!active)return;
+      active.reasons = active.reasons.includes(r)
+        ? active.reasons.filter(x=>x!==r)
+        : [...active.reasons,r];
+      render();
+    };
+
+    el.appendChild(d);
+  });
+}
+
+function renderStats(){
+  const t=todayCravings();
+  const total=t.length;
+  const consumed=t.filter(c=>c.result==="consumed").length;
+  const resisted=total-consumed;
+
+  document.getElementById("stats").innerText=
+    `Today: ${total} • Resisted: ${resisted} • Consumed: ${consumed}`;
+}
+
+function render(){
+  renderReasons();
+  renderStats();
+}
+
+render();
+</script>
+
+</body>
+</html>
