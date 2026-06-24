@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Habit Breaker</title>
+
+<style>
+:root{
+  --bg:#05060a;
+  --panel:#121521;
+  --panel2:#0e111a;
+  --text:#e9e9ee;
+  --muted:#9aa0ad;
+  --accent:#8b6cff;
+  --danger:#ff4d4d;
+  --ok:#2ecc71;
+  --border:#252a3a;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.wrap{
+  max-width:920px;
+  margin:0 auto;
+  padding:28px 18px 60px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.card{
+  background:linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:18px;
+  box-shadow:0 18px 40px rgba(0,0,0,0.35);
+}
+
+h2{
+  margin:0 0 10px 0;
+  font-size:16px;
+  font-weight:600;
+}
+
+.small{
+  color:var(--muted);
+  font-size:12px;
+}
+
+button{
+  border:0;
+  border-radius:12px;
+  padding:12px 14px;
+  cursor:pointer;
+  font-weight:500;
+  color:white;
+}
+
+.primary{background:var(--accent)}
+.danger{background:var(--danger)}
+.ghost{
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--text);
+}
+
+button:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+
+input{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:var(--panel2);
+  color:var(--text);
+  outline:none;
+  text-transform:uppercase;
+}
+
+.row{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+
+.pill{
+  padding:7px 10px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  font-size:12px;
+  color:var(--muted);
+  cursor:pointer;
+}
+
+.pill.active{
+  border-color:var(--accent);
+  color:var(--text);
+  background:rgba(139,108,255,0.12);
+}
+
+/* progress */
+.bar{
+  width:100%;
+  height:12px;
+  border-radius:999px;
+  background:#1a1d2a;
+  overflow:hidden;
+  margin-top:12px;
+  border:1px solid var(--border);
+}
+
+.fill{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,var(--accent),#a18bff);
+  transition:width 0.2s linear;
+}
+
+.encourage{
+  margin-top:10px;
+  font-size:12px;
+  color:var(--muted);
+  min-height:16px;
+}
+
+/* victory animation */
+.victory{
+  animation:pop 0.6s ease-out;
+  color:var(--ok);
+  font-weight:600;
+}
+
+@keyframes pop{
+  0%{transform:scale(0.9);opacity:0.2}
+  60%{transform:scale(1.05);opacity:1}
+  100%{transform:scale(1)}
+}
+
+.hidden{display:none}
+
+.flex{display:flex;gap:10px}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+  <div class="card">
+    <h2>Habit Breaker</h2>
+    <div class="small">Urge interruption system</div>
+  </div>
+
+  <div class="card">
+    <button id="urgeBtn" class="primary" style="width:100%">I WANT SWEETS</button>
+
+    <div id="active" class="hidden" style="margin-top:12px">
+
+      <div style="display:flex;justify-content:space-between">
+        <div>Session running</div>
+        <div id="pct">0%</div>
+      </div>
+
+      <div class="bar"><div class="fill" id="fill"></div></div>
+
+      <div class="encourage" id="msg">You noticed the urge.</div>
+
+      <div class="row">
+        <button class="danger" id="giveBtn">I GAVE IN</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Trigger</h2>
+
+    <div class="flex">
+      <input id="reasonInput" placeholder="TYPE TRIGGER"/>
+      <button class="primary" id="addReasonBtn">Add</button>
+    </div>
+
+    <div class="row" id="reasonList"></div>
+  </div>
+
+  <div class="card">
+    <h2>Today</h2>
+    <div id="stats" class="small"></div>
+  </div>
+
+</div>
+
+<script>
+const KEY="habit_breaker_v1";
+
+let state=JSON.parse(localStorage.getItem(KEY)||JSON.stringify({
+  cravings:[],
+  reasons:[]
+}));
+
+let active=null;
+let interval=null;
+let sec=0;
+
+const DURATION=300; // 5 minutes
+
+function today(){
+  return new Date().toISOString().slice(0,10);
+}
+
+function save(){
+  localStorage.setItem(KEY,JSON.stringify(state));
+  render();
+}
+
+function cap(s){return s.trim().toUpperCase();}
+
+function start(){
+  if(interval) clearInterval(interval);
+
+  active={ts:Date.now(),reasons:[],done:false};
+  sec=0;
+
+  document.getElementById("active").classList.remove("hidden");
+  document.getElementById("urgeBtn").disabled=true;
+
+  interval=setInterval(tick,1000);
+}
+
+function tick(){
+  sec++;
+  const pct=Math.min(100,Math.floor((sec/DURATION)*100));
+
+  document.getElementById("fill").style.width=pct+"%";
+  document.getElementById("pct").innerText=pct+"%";
+
+  if(pct>=100){
+    completeSuccess();
+  }
+
+  setMessage(pct);
+}
+
+function setMessage(p){
+  const m=document.getElementById("msg");
+
+  if(p<20) m.innerText="You noticed the urge. That is the hardest step.";
+  else if(p<40) m.innerText="Urges weaken when observed.";
+  else if(p<60) m.innerText="You are past the initial impulse.";
+  else if(p<80) m.innerText="Stay steady. This is training.";
+  else if(p<100) m.innerText="Almost done. Do not act on impulse.";
+}
+
+function completeSuccess(){
+  clearInterval(interval);
+
+  document.getElementById("msg").innerText="✔ URGE EXPIRED";
+  document.getElementById("msg").classList.add("victory");
+
+  setTimeout(()=>{
+    finish("resisted");
+  },800);
+}
+
+function finish(result){
+  state.cravings.push({
+    ts:active.ts,
+    day:today(),
+    durationSec:sec,
+    result,
+    reasons:active.reasons
+  });
+
+  active=null;
+  sec=0;
+
+  document.getElementById("active").classList.add("hidden");
+  document.getElementById("urgeBtn").disabled=false;
+
+  document.getElementById("fill").style.width="0%";
+  document.getElementById("pct").innerText="0%";
+  document.getElementById("msg").classList.remove("victory");
+
+  save();
+}
+
+document.getElementById("urgeBtn").onclick=start;
+document.getElementById("giveBtn").onclick=()=>finish("consumed");
+
+document.getElementById("addReasonBtn").onclick=()=>{
+  const inp=document.getElementById("reasonInput");
+  const v=cap(inp.value);
+  if(!v)return;
+
+  if(!state.reasons.includes(v)) state.reasons.push(v);
+  if(active && !active.reasons.includes(v)) active.reasons.push(v);
+
+  inp.value="";
+  save();
+};
+
+function todayData(){
+  return state.cravings.filter(c=>c.day===today());
+}
+
+function renderReasons(){
+  const el=document.getElementById("reasonList");
+  el.innerHTML="";
+
+  state.reasons.forEach(r=>{
+    const d=document.createElement("div");
+    d.className="pill"+(active && active.reasons.includes(r)?" active":"");
+    d.innerText=r;
+
+    d.onclick=()=>{
+      if(!active)return;
+      active.reasons = active.reasons.includes(r)
+        ? active.reasons.filter(x=>x!==r)
+        : [...active.reasons,r];
+      render();
+    };
+
+    el.appendChild(d);
+  });
+}
+
+function renderStats(){
+  const t=todayData();
+  const total=t.length;
+  const cons=t.filter(x=>x.result==="consumed").length;
+  const res=total-cons;
+
+  document.getElementById("stats").innerText=
+    `Today: ${total} • Resisted: ${res} • Consumed: ${cons}`;
+}
+
+function render(){
+  renderReasons();
+  renderStats();
+}
+
+render();
+</script>
+
+</body>
+</html>
