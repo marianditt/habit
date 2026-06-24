@@ -91,7 +91,7 @@ input{
   display:flex;
   gap:12px;
   flex-wrap:wrap;
-  margin-top:12px;
+  margin-top:16px;
 }
 
 /* pills */
@@ -125,7 +125,7 @@ input{
   border-radius:999px;
   overflow:hidden;
   border:1px solid var(--border);
-  margin-top:10px;
+  margin-top:14px;
   background:#151a28;
 }
 
@@ -191,7 +191,7 @@ input{
 }
 
 .achText{
-  margin-top:10px;
+  margin-top:14px;
   font-size:12px;
   color:#4cc9f0;
   opacity:0;
@@ -232,7 +232,7 @@ input{
 
       <div class="achText" id="ach">5 MINUTES COMPLETED</div>
 
-      <div class="meta" id="msg" style="margin-top:10px"></div>
+      <div class="meta" id="msg" style="margin-top:14px"></div>
 
       <div class="row">
         <button class="danger" id="giveBtn">I GAVE IN</button>
@@ -281,19 +281,30 @@ function save(){
   render();
 }
 
+function lerpC(a,b,t){
+  const ah=parseInt(a.slice(1),16),bh=parseInt(b.slice(1),16);
+  const ar=(ah>>16)&0xff,ag=(ah>>8)&0xff,ab=ah&0xff;
+  const br=(bh>>16)&0xff,bg=(bh>>8)&0xff,bb=bh&0xff;
+  return `rgb(${Math.round(ar+(br-ar)*t)},${Math.round(ag+(bg-ag)*t)},${Math.round(ab+(bb-ab)*t)})`;
+}
+
 function color(p){
-  if(p<25) return "#ff4d4d";
-  if(p<50) return "#ff8a3d";
-  if(p<75) return "#ffd166";
-  return "#4cc9f0";
+  const stops=[{p:0,c:'#ff4d4d'},{p:.25,c:'#ff8a3d'},{p:.5,c:'#ffd166'},{p:.75,c:'#4cc9f0'},{p:1,c:'#4cc9f0'}];
+  for(let i=0;i<stops.length-1;i++){
+    if(p>=stops[i].p*100&&p<=stops[i+1].p*100){
+      const t=(p-stops[i].p*100)/((stops[i+1].p-stops[i].p)*100);
+      return lerpC(stops[i].c,stops[i+1].c,t);
+    }
+  }
+  return '#4cc9f0';
 }
 
 function msg(p){
   const m=document.getElementById("msg");
-  if(p<20) m.innerText="Not today.";
-  else if(p<40) m.innerText="Keep the streak alive.";
-  else if(p<60) m.innerText="Every second counts.";
-  else if(p<80) m.innerText="You're winning this one.";
+  if(p<5) m.innerText="Not today.";
+  else if(p<15) m.innerText="Keep the streak alive.";
+  else if(p<30) m.innerText="Every second counts.";
+  else if(p<55) m.innerText="You're winning this one.";
   else m.innerText="Finish what you started.";
 }
 
