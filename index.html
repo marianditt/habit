@@ -337,6 +337,8 @@ let state=JSON.parse(localStorage.getItem(KEY)||JSON.stringify({
   reasons:[],
   selectedReasons:[]
 }));
+// migrate old localStorage that lacks selectedReasons
+if(!state.selectedReasons) state.selectedReasons=[];
 
 let active=null;
 let t=null;
