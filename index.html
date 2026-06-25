@@ -33,41 +33,43 @@ body{
 .wrap{
   max-width:920px;
   margin:0 auto;
-  padding:28px 18px 60px;
+  padding:20px 16px 48px;
   display:flex;
   flex-direction:column;
-  gap:20px;
+  gap:14px; /* issue 1: tighter */
 }
 
 .card{
   background:linear-gradient(180deg,var(--panel),var(--panel2));
   border:1px solid var(--border);
   border-radius:18px;
-  padding:24px;
+  padding:18px; /* issue 1: reduced from 24px */
   box-shadow:0 18px 40px rgba(0,0,0,0.35);
   transition:box-shadow .4s, transform .4s;
 }
 
 h2{
-  margin:0 0 6px;
-  font-size:20px;
+  margin:0 0 4px;
+  font-size:19px;
   font-weight:700;
 }
 
 .subtitle{
   font-size:13px;
   color:var(--muted);
-  margin-bottom:10px;
+  margin-bottom:8px;
 }
 
 button{
   border:0;
   border-radius:12px;
-  padding:12px 14px;
+  padding:0 14px;
   cursor:pointer;
   font-weight:600;
   color:#fff;
   height:48px;
+  font-family:inherit;
+  font-size:14px;
 }
 
 .primary{background:#8b6cff}
@@ -83,19 +85,40 @@ input{
   border:1px solid var(--border);
   background:var(--panel2);
   color:var(--text);
-  text-transform:uppercase;
   font-family:inherit;
+  font-size:14px;
 }
+/* issue 3: removed text-transform:uppercase */
 
 .row{
   display:flex;
-  gap:12px;
+  gap:10px;
   flex-wrap:wrap;
-  margin-top:16px;
+  margin-top:12px;
 }
 
-/* pills */
+/* --- issue 6: filled circle buttons --- */
+.btn-circle{
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  font-weight:700;
+  background:#8b6cff;
+  color:#fff;
+  flex-shrink:0;
+  padding:0;
+  line-height:1;
+}
+
+/* --- pills --- */
 .pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
   padding:7px 10px;
   border-radius:999px;
   border:1px solid var(--border);
@@ -109,14 +132,33 @@ input{
   color:var(--text);
   background:rgba(139,108,255,.12);
 }
+.pill-del{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:rgba(255,77,77,.25);  /* issue 4 + issue 6: filled */
+  color:#ff4d4d;
+  font-size:13px;
+  font-weight:700;
+  line-height:1;
+  cursor:pointer;
+  transition:background .15s;
+  flex-shrink:0;
+}
+.pill-del:hover{
+  background:rgba(255,77,77,.5);
+}
 
-/* progress */
+/* --- progress --- */
 .meta{
   display:flex;
   justify-content:space-between;
   font-size:12px;
   color:var(--muted);
-  margin-top:10px;
+  margin-top:6px;  /* issue 1: reduced */
 }
 
 .bar{
@@ -125,7 +167,7 @@ input{
   border-radius:999px;
   overflow:hidden;
   border:1px solid var(--border);
-  margin-top:14px;
+  margin-top:8px;  /* issue 1: reduced */
   background:#151a28;
 }
 
@@ -133,7 +175,6 @@ input{
   height:100%;
   width:0%;
   background:var(--hot);
-  box-shadow:0 0 12px var(--hot);
   transition:width .2s linear, background .3s linear, box-shadow .3s linear;
 }
 
@@ -154,32 +195,14 @@ input{
   100%{transform:scale(1.4);opacity:0}
 }
 
-/* log */
-.logItem{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:10px;
-  border:1px solid var(--border);
-  border-radius:12px;
-  margin-top:8px;
+/* --- motivational message: close to bar (issue 1) --- */
+#msg{
+  margin-top:4px;
   font-size:12px;
+  min-height:16px;
 }
 
-.minus{
-  width:28px;
-  height:28px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#ff4d4d;
-  font-weight:700;
-  cursor:pointer;
-  border:1px solid rgba(255,77,77,.25);
-}
-
-/* achievement */
+/* --- success: issue 7 --- */
 @keyframes pulseBlue{
   0%{box-shadow:0 0 0 rgba(76,201,240,0)}
   40%{box-shadow:0 0 30px rgba(76,201,240,.6)}
@@ -191,15 +214,61 @@ input{
 }
 
 .achText{
-  margin-top:14px;
-  font-size:12px;
+  margin-top:8px;
+  font-size:13px;
+  font-weight:700;
   color:#4cc9f0;
+  text-align:center;
   opacity:0;
-  transition:opacity .4s;
+  transition:opacity .6s;
 }
 
 .achText.show{
   opacity:1;
+}
+
+/* --- log entry appear animation (issue 7) --- */
+@keyframes logEntry{
+  from{opacity:0;transform:translateY(-10px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* --- log --- */
+.logItem{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  margin-top:6px;
+  font-size:12px;
+  animation:logEntry .3s ease-out; /* issue 7: appear */
+}
+
+.minus{
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,77,77,.2);  /* issue 6: filled */
+  color:#ff4d4d;
+  font-size:18px;
+  font-weight:700;
+  cursor:pointer;
+  border:none;  /* issue 6: no outline */
+  transition:background .15s;
+  flex-shrink:0;
+}
+.minus:hover{
+  background:rgba(255,77,77,.4);
+}
+
+/* --- session card: no jump --- */
+.session-card{
+  min-height:0;
 }
 
 .hidden{display:none}
@@ -215,7 +284,8 @@ input{
     <div class="subtitle">Delay urges. Build control.</div>
   </div>
 
-  <div class="card">
+  <div class="card session-card">
+    <!-- issue 2: same button swaps text/style -->
     <button id="urgeBtn" class="primary" style="width:100%">I WANT SWEETS</button>
 
     <div id="active" class="hidden">
@@ -230,13 +300,11 @@ input{
         <div class="ring" id="ring"></div>
       </div>
 
-      <div class="achText" id="ach">5 MINUTES COMPLETED</div>
+      <!-- issue 1: msg close to bar -->
+      <div class="meta" id="msg"></div>
 
-      <div class="meta" id="msg" style="margin-top:14px"></div>
-
-      <div class="row">
-        <button class="danger" id="giveBtn">I GAVE IN</button>
-      </div>
+      <!-- issue 7: success message -->
+      <div class="achText" id="ach">YOU DID IT</div>
 
     </div>
   </div>
@@ -245,8 +313,10 @@ input{
     <h2>Trigger</h2>
 
     <div class="row">
-      <input id="reasonInput" placeholder="ADD TRIGGER"/>
-      <button class="primary" id="addReason">Add</button>
+      <!-- issue 3: placeholder sentence case -->
+      <input id="reasonInput" placeholder="Add trigger"/>
+      <!-- issue 6: circle filled + -->
+      <button class="btn-circle" id="addReason">+</button>
     </div>
 
     <div class="row" id="reasons"></div>
@@ -310,18 +380,26 @@ function msg(p){
 
 function start(){
   if(t) clearInterval(t);
-
-  active={ts:Date.now(),reasons:[]};
+  active={ts:Date.now(), reasons:[]};
   sec=0;
 
   document.getElementById("active").classList.remove("hidden");
-  document.getElementById("urgeBtn").disabled=true;
 
-  t=setInterval(tick,1000);
+  // issue 2: swap button text + style
+  const btn=document.getElementById("urgeBtn");
+  btn.innerText="I GAVE IN";
+  btn.className="danger";
+  btn.disabled=false;
+
+  // issue 5: stable timer — 500ms, compare Date.now()
+  t=setInterval(tick,500);
 }
 
 function tick(){
-  sec++;
+  if(!active) return;  // guard: finish() may have cleared active
+  // issue 5: compute from start time, not counter
+  const elapsed=Math.floor((Date.now()-active.ts)/1000);
+  sec=elapsed;
 
   document.getElementById("sec").innerText=sec;
 
@@ -330,7 +408,11 @@ function tick(){
 
   fill.style.width=Math.min(100,p)+"%";
   fill.style.background=color(p);
-  fill.style.boxShadow=`0 0 14px ${color(p)}`;
+
+  // issue 8: glow intensity starts hot, cools to nothing at 99%
+  const glowIntensity=Math.max(0,1-p/99);  // 1 at 0%, 0 at 99%
+  const blur=2+glowIntensity*30;           // 32px at start, 2px at 99%
+  fill.style.boxShadow=`0 0 ${blur}px ${color(p)}`;
 
   msg(p);
 
@@ -342,14 +424,20 @@ function tick(){
 function complete(){
   clearInterval(t);
 
+  // issue 8: clear glow (success handles its own)
+  document.getElementById("fill").style.boxShadow='none';
+
   const bar=document.getElementById("bar");
   const ring=document.getElementById("ring");
 
-  bar.classList.add("achieve");
+  bar.classList.add("achieve");  // issue 7: cold blue pulse
   ring.classList.add("active");
 
+  // issue 7: success message
   const ach=document.getElementById("ach");
   ach.classList.add("show");
+
+  // issue 8: fill cold blue at 100% (already handled by color(p))
 
   setTimeout(()=>{
     finish("resisted");
@@ -357,6 +445,9 @@ function complete(){
 }
 
 function finish(result){
+  if(t){ clearInterval(t); t=null; }
+  if(!active) return;  // idempotent: already finished
+
   state.cravings.push({
     ts:active.ts,
     day:today(),
@@ -369,9 +460,14 @@ function finish(result){
   sec=0;
 
   document.getElementById("active").classList.add("hidden");
-  document.getElementById("urgeBtn").disabled=false;
+
+  // issue 2: revert button
+  const btn=document.getElementById("urgeBtn");
+  btn.innerText="I WANT SWEETS";
+  btn.className="primary";
 
   document.getElementById("fill").style.width="0%";
+  document.getElementById("fill").style.boxShadow='none';
   document.getElementById("ach").classList.remove("show");
   document.getElementById("bar").classList.remove("achieve");
   document.getElementById("ring").classList.remove("active");
@@ -379,12 +475,20 @@ function finish(result){
   save();
 }
 
-document.getElementById("urgeBtn").onclick=start;
-document.getElementById("giveBtn").onclick=()=>finish("consumed");
+// issue 2: single button handles both start and give-in
+document.getElementById("urgeBtn").onclick=function(){
+  if(active){
+    // currently in session — give in
+    finish("consumed");
+  } else {
+    start();
+  }
+};
 
 document.getElementById("addReason").onclick=()=>{
   const inp=document.getElementById("reasonInput");
-  const v=inp.value.trim().toUpperCase();
+  const v=inp.value.trim();
+  // issue 3: no toUpperCase — store original case
   if(!v)return;
 
   if(!state.reasons.includes(v)) state.reasons.push(v);
@@ -401,11 +505,27 @@ function renderReasons(){
   state.reasons.forEach(r=>{
     const d=document.createElement("div");
     d.className="pill"+(active && active.reasons.includes(r)?" active":"");
-    d.innerText=r;
+
+    const text=document.createElement("span");
+    text.innerText=r;
+    d.appendChild(text);
+
+    // issue 4: delete button on each trigger
+    const del=document.createElement("span");
+    del.className="pill-del";
+    del.innerText="×";
+    del.onclick=(e)=>{
+      e.stopPropagation();
+      const idx=state.reasons.indexOf(r);
+      if(idx>-1) state.reasons.splice(idx,1);
+      if(active) active.reasons=active.reasons.filter(x=>x!==r);
+      save();
+    };
+    d.appendChild(del);
 
     d.onclick=()=>{
       if(!active)return;
-      active.reasons = active.reasons.includes(r)
+      active.reasons=active.reasons.includes(r)
         ? active.reasons.filter(x=>x!==r)
         : [...active.reasons,r];
       render();
@@ -429,25 +549,27 @@ function renderLog(){
   const el=document.getElementById("log");
   el.innerHTML="";
 
-  state.cravings.filter(c=>c.day===today()).slice().reverse().forEach(c=>{
+  const todayEntries=state.cravings.filter(c=>c.day===today()).slice().reverse();
+
+  todayEntries.forEach((c,i)=>{
     const row=document.createElement("div");
     row.className="logItem";
 
     const left=document.createElement("div");
     left.innerText=`${c.sec}s • ${c.result.toUpperCase()}`;
 
-    const del=document.createElement("div");
-    del.className="minus";
-    del.innerText="−";
+    const delBtn=document.createElement("div");
+    delBtn.className="minus";
+    delBtn.innerText="−";
 
-    del.onclick=()=>{
-      const i=state.cravings.indexOf(c);
-      if(i>-1) state.cravings.splice(i,1);
+    delBtn.onclick=()=>{
+      const idx=state.cravings.indexOf(c);
+      if(idx>-1) state.cravings.splice(idx,1);
       save();
     };
 
     row.appendChild(left);
-    row.appendChild(del);
+    row.appendChild(delBtn);
     el.appendChild(row);
   });
 }
