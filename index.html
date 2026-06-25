@@ -487,11 +487,14 @@ document.getElementById("urgeBtn").onclick=function(){
 
 document.getElementById("addReason").onclick=()=>{
   const inp=document.getElementById("reasonInput");
-  const v=inp.value.trim();
-  // issue 3: no toUpperCase — store original case
+  const raw=inp.value;
+  const v=raw.trim().toUpperCase();  // normalized: trimmed uppercase
   if(!v)return;
 
+  // case-insensitive set: if new, add to state
   if(!state.reasons.includes(v)) state.reasons.push(v);
+
+  // submitting always activates in current session (if active)
   if(active && !active.reasons.includes(v)) active.reasons.push(v);
 
   inp.value="";
