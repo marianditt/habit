@@ -129,8 +129,8 @@ input{
 }
 .pill.active{
   border-color:#8b6cff;
-  color:#fff;
-  background:#8b6cff;
+  color:var(--text);
+  background:transparent;
 }
 .pill-del{
   display:inline-flex;
@@ -139,7 +139,7 @@ input{
   width:18px;
   height:18px;
   border-radius:50%;
-  background:rgba(255,77,77,.25);  /* issue 4 + issue 6: filled */
+  background:rgba(255,77,77,.25);
   color:#ff4d4d;
   font-size:13px;
   font-weight:700;
@@ -334,7 +334,8 @@ input{
 const KEY="hb_final";
 let state=JSON.parse(localStorage.getItem(KEY)||JSON.stringify({
   cravings:[],
-  reasons:[]
+  reasons:[],
+  selectedReasons:[]
 }));
 
 let active=null;
@@ -380,7 +381,7 @@ function msg(p){
 
 function start(){
   if(t) clearInterval(t);
-  active={ts:Date.now(), reasons:[]};
+  active={ts:Date.now(), reasons:[...state.selectedReasons]};
   sec=0;
 
   document.getElementById("active").classList.remove("hidden");
@@ -448,10 +449,14 @@ function finish(result){
   if(t){ clearInterval(t); t=null; }
   if(!active) return;  // idempotent: already finished
 
+  // compute elapsed from wall clock, not the global sec (laggy when tab unfocused)
+  const elapsed=Math.floor((Date.now()-active.ts)/1000);
+  const finalSec=result==='resisted' ? MAX : Math.min(elapsed,MAX);
+
   state.cravings.push({
     ts:active.ts,
     day:today(),
-    sec,
+    sec:finalSec,
     result,
     reasons:active.reasons
   });
@@ -494,7 +499,9 @@ document.getElementById("addReason").onclick=()=>{
   // case-insensitive set: if new, add to state
   if(!state.reasons.includes(v)) state.reasons.push(v);
 
-  // submitting always activates in current session (if active)
+  // submitting always activates in persistent selection
+  if(!state.selectedReasons.includes(v)) state.selectedReasons.push(v);
+  // mirror in active session if one is running
   if(active && !active.reasons.includes(v)) active.reasons.push(v);
 
   inp.value="";
@@ -507,7 +514,7 @@ function renderReasons(){
 
   state.reasons.forEach(r=>{
     const d=document.createElement("div");
-    d.className="pill"+(active && active.reasons.includes(r)?" active":"");
+    d.className="pill"+(state.selectedReasons.includes(r)?" active":"");
 
     const text=document.createElement("span");
     text.innerText=r;
@@ -527,11 +534,17 @@ function renderReasons(){
     d.appendChild(del);
 
     d.onclick=()=>{
-      if(!active)return;
-      active.reasons=active.reasons.includes(r)
-        ? active.reasons.filter(x=>x!==r)
-        : [...active.reasons,r];
-      render();
+      // toggle in persistent selection (always works, even without session)
+      state.selectedReasons=state.selectedReasons.includes(r)
+        ? state.selectedReasons.filter(x=>x!==r)
+        : [...state.selectedReasons,r];
+      // mirror in active session if one is running
+      if(active){
+        active.reasons=active.reasons.includes(r)
+          ? active.reasons.filter(x=>x!==r)
+          : [...active.reasons,r];
+      }
+      save();
     };
 
     el.appendChild(d);
